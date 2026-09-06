@@ -1,0 +1,51 @@
+﻿@import "tailwindcss";
+
+@theme {
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --color-primary: #09090b; /* Zinc 950 - Ultra premium black */
+  --color-primary-hover: #27272a; /* Zinc 800 */
+  --color-accent: #2563eb; /* Trustworthy Blue 600 */
+  --color-accent-hover: #1d4ed8; /* Blue 700 */
+  --color-surface: #ffffff;
+  --color-background: #fafafa;
+  --color-border: #e4e4e7; /* Zinc 200 */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-pill: 9999px;
+}
+
+/* Base Reset & Typography System (Per Build Rules) */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-primary);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+/* Interaction & Utility System */
+@layer utilities {
+  .premium-shadow {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+  .premium-hover-lift {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .premium-hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  }
+}
