@@ -25,16 +25,20 @@ export default function SubmitClaimPage() {
     try {
       const data = new FormData();
       data.append('video', videoBlob, 'claim-video.webm');
+      data.append('asset_id', formData.policyNumber); // Bridge to backend requirement
+      
       Object.entries(formData).forEach(([k, v]) => data.append(k, v));
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/claims`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000'}/api/assess`, {
         method: 'POST',
         body: data
       });
 
       if (!response.ok) throw new Error('Submission failed');
       const result = await response.json();
-      navigate(`/status/${result.claimId}`);
+      
+      // Navigate to the status page using the returned asset_id
+      navigate(`/status/${result.asset_id}`);
     } catch {
       alert('Submission failed. Ensure backend is running.');
       setIsSubmitting(false);
@@ -103,7 +107,7 @@ export default function SubmitClaimPage() {
           <Loader2 className="w-16 h-16 text-[#2563eb] animate-spin mx-auto mb-6" />
           <h2 className="text-2xl font-bold text-[#09090b] mb-3">Uploading & Analyzing...</h2>
           <p className="text-gray-600 max-w-sm mx-auto">
-            Your video is being processed by our custom YOLOv8 model. Please don't close this tab.
+            Your video is being securely processed by our AI verification system. Please don't close this tab.
           </p>
         </div>
       )}
