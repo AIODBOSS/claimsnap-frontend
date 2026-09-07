@@ -1,14 +1,36 @@
 import { useState, useEffect } from 'react';
-import { Activity, CheckCircle, XCircle, ShieldAlert, RefreshCw, X, AlertTriangle, Check, Video, Play, Pause } from 'lucide-react';
+import { Activity, CheckCircle, XCircle, ShieldAlert, RefreshCw, X, AlertTriangle, Check, Video } from 'lucide-react';
 
-const STANDARD_SUGGESTIONS = [
-  'Shattered Glass',
-  'Deep Puncture',
-  'Burn Mark',
-  'Corrosion',
-  'Electrical Short',
-  'Water Intrusion',
-  'Severe Deformation'
+const COMPREHENSIVE_TAXONOMY = [
+  // Vehicle Damage
+  'Front-End Collision / Bumper Crush',
+  'Rear-End Dent & Panel Deformation',
+  'Side Door Scrape & Deep Gouge',
+  'Windshield Star Crack / Fracture',
+  'Side Mirror Shattered / Missing',
+  'Headlight / Taillight Assembly Crack',
+  'Roof Hail Impact Dent',
+  'Underbody Chassis Scrape',
+  
+  // Property & Home Damage
+  'Roof Shingle Wind Damage / Missing',
+  'Drywall Water Stain / Mold Infiltration',
+  'Foundation Structural Hairline Crack',
+  'Window Pane Shatter / Impact Break',
+  'Hardwood Flooring Water Buckling',
+  'Ceiling Plaster Sag & Cracking',
+  'Siding Slat Puncture / Detachment',
+
+  // Electronics Damage
+  'Display Screen Shatter / LCD Bleed',
+  'Port Corrosion / Liquid Spill Residue',
+  'Casing Dent / Severe Thermal Burn',
+  'Keyboard / Button Mechanical Jam',
+  'Internal Board Short Circuit',
+
+  // General / Other
+  'No Visible Damage / False Positive',
+  'Normal Wear and Tear'
 ];
 
 export default function AdminDashboard() {
@@ -18,7 +40,6 @@ export default function AdminDashboard() {
   const [correctedLabel, setCorrectedLabel] = useState('');
   const [customLabel, setCustomLabel] = useState('');
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
-  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const [toast, setToast] = useState(null);
 
   const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
@@ -66,7 +87,6 @@ export default function AdminDashboard() {
       setSelectedClaim(null);
       setCorrectedLabel('');
       setCustomLabel('');
-      setIsPlayingVideo(false);
       fetchClaims();
     } catch (err) {
       console.error(err);
@@ -77,7 +97,7 @@ export default function AdminDashboard() {
   const handleCustomLabelChange = (val) => {
     setCustomLabel(val);
     if (val.trim().length > 0) {
-      const matches = STANDARD_SUGGESTIONS.filter(item => 
+      const matches = COMPREHENSIVE_TAXONOMY.filter(item => 
         item.toLowerCase().includes(val.toLowerCase())
       );
       setFilteredSuggestions(matches);
@@ -150,9 +170,8 @@ export default function AdminDashboard() {
                     <td className="p-5 text-right">
                       <button onClick={() => { 
                         setSelectedClaim(claim); 
-                        setIsPlayingVideo(false);
                         const defaultLbl = claim.adminCorrectedLabel || '';
-                        if (['Crack', 'Scratch', 'Dent', 'Mold', 'None'].includes(defaultLbl)) {
+                        if (COMPREHENSIVE_TAXONOMY.includes(defaultLbl)) {
                           setCorrectedLabel(defaultLbl);
                           setCustomLabel('');
                         } else if (defaultLbl) {
@@ -162,7 +181,7 @@ export default function AdminDashboard() {
                           setCorrectedLabel('');
                           setCustomLabel('');
                         }
-                      }} className="text-[#2563eb] hover:text-blue-800 text-sm font-bold">Review Claim &rarr;</button>
+                      }} className="text-[#2563eb] hover:text-blue-800 text-sm font-bold">Review Claim ?</button>
                     </td>
                   </tr>
                 ))
@@ -177,7 +196,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden premium-shadow max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-[#e4e4e7] flex justify-between items-center bg-[#fafafa]">
               <h2 className="text-xl font-bold text-[#09090b]">Adjuster Review & Override</h2>
-              <button onClick={() => { setSelectedClaim(null); setIsPlayingVideo(false); }} className="text-gray-400 hover:text-gray-800"><X size={20}/></button>
+              <button onClick={() => setSelectedClaim(null)} className="text-gray-400 hover:text-gray-800"><X size={20}/></button>
             </div>
             
             <div className="p-6 space-y-6">
@@ -186,32 +205,21 @@ export default function AdminDashboard() {
                 <span className="font-mono font-bold text-[#09090b]">{selectedClaim.id}</span>
               </div>
 
-              {/* Functional Interactive Video Evidence Simulator */}
-              <div className="bg-gray-900 rounded-2xl overflow-hidden aspect-video flex flex-col items-center justify-center relative shadow-inner">
-                {isPlayingVideo ? (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-black text-white relative">
-                    <div className="absolute top-3 left-3 flex items-center gap-2 bg-red-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider animate-pulse">
-                      <span className="w-2 h-2 rounded-full bg-white"></span> Live Stream
-                    </div>
-                    <Video className="w-12 h-12 text-blue-500 animate-bounce mb-2" />
-                    <p className="text-xs font-mono text-gray-300">Streaming Evidence Payload ({selectedClaim.id})</p>
-                    <button 
-                      onClick={() => setIsPlayingVideo(false)} 
-                      className="mt-4 px-4 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-full text-xs font-bold flex items-center gap-1.5 transition-all"
-                    >
-                      <Pause size={14} /> Pause Stream
-                    </button>
-                  </div>
+              {/* Real HTML5 Video Player */}
+              <div className="bg-black rounded-2xl overflow-hidden aspect-video flex items-center justify-center relative shadow-inner">
+                {selectedClaim.videoUrl ? (
+                  <video 
+                    controls 
+                    autoPlay 
+                    src={`${API_BASE}${selectedClaim.videoUrl}`} 
+                    className="w-full h-full object-contain"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
                 ) : (
-                  <div className="text-center p-4">
-                    <Video className="w-10 h-10 text-gray-500 mx-auto mb-2" />
-                    <p className="text-xs text-gray-400 font-medium">Evidence Stream for ({selectedClaim.id})</p>
-                    <button 
-                      onClick={() => setIsPlayingVideo(true)} 
-                      className="mt-3 px-4 py-2 bg-[#2563eb] hover:bg-blue-700 text-white rounded-full text-xs font-bold flex items-center gap-1.5 mx-auto transition-all shadow-md"
-                    >
-                      <Play size={14} /> Play Evidence Video
-                    </button>
+                  <div className="text-center p-4 text-gray-400">
+                    <Video className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-xs">No video asset attached to this record.</p>
                   </div>
                 )}
               </div>
@@ -234,7 +242,7 @@ export default function AdminDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Corrected Label (Active Learning Standard)</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Comprehensive Corrected Label (Taxonomy)</label>
                 <select 
                   value={correctedLabel} 
                   onChange={(e) => {
@@ -243,13 +251,38 @@ export default function AdminDashboard() {
                   }}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:border-[#2563eb] mb-3"
                 >
-                  <option value="">Select standard classification...</option>
-                  <option value="Crack">Crack / Fracture</option>
-                  <option value="Scratch">Surface Scratch</option>
-                  <option value="Dent">Structural Dent</option>
-                  <option value="Mold">Water / Mold Damage</option>
-                  <option value="None">No Damage / False Positive</option>
-                  <option value="Other">Other (Custom Label)...</option>
+                  <option value="">Select master taxonomy classification...</option>
+                  <optgroup label="Vehicle Damage">
+                    <option value="Front-End Collision / Bumper Crush">Front-End Collision / Bumper Crush</option>
+                    <option value="Rear-End Dent & Panel Deformation">Rear-End Dent & Panel Deformation</option>
+                    <option value="Side Door Scrape & Deep Gouge">Side Door Scrape & Deep Gouge</option>
+                    <option value="Windshield Star Crack / Fracture">Windshield Star Crack / Fracture</option>
+                    <option value="Side Mirror Shattered / Missing">Side Mirror Shattered / Missing</option>
+                    <option value="Headlight / Taillight Assembly Crack">Headlight / Taillight Assembly Crack</option>
+                    <option value="Roof Hail Impact Dent">Roof Hail Impact Dent</option>
+                    <option value="Underbody Chassis Scrape">Underbody Chassis Scrape</option>
+                  </optgroup>
+                  <optgroup label="Property & Home Damage">
+                    <option value="Roof Shingle Wind Damage / Missing">Roof Shingle Wind Damage / Missing</option>
+                    <option value="Drywall Water Stain / Mold Infiltration">Drywall Water Stain / Mold Infiltration</option>
+                    <option value="Foundation Structural Hairline Crack">Foundation Structural Hairline Crack</option>
+                    <option value="Window Pane Shatter / Impact Break">Window Pane Shatter / Impact Break</option>
+                    <option value="Hardwood Flooring Water Buckling">Hardwood Flooring Water Buckling</option>
+                    <option value="Ceiling Plaster Sag & Cracking">Ceiling Plaster Sag & Cracking</option>
+                    <option value="Siding Slat Puncture / Detachment">Siding Slat Puncture / Detachment</option>
+                  </optgroup>
+                  <optgroup label="Electronics Damage">
+                    <option value="Display Screen Shatter / LCD Bleed">Display Screen Shatter / LCD Bleed</option>
+                    <option value="Port Corrosion / Liquid Spill Residue">Port Corrosion / Liquid Spill Residue</option>
+                    <option value="Casing Dent / Severe Thermal Burn">Casing Dent / Severe Thermal Burn</option>
+                    <option value="Keyboard / Button Mechanical Jam">Keyboard / Button Mechanical Jam</option>
+                    <option value="Internal Board Short Circuit">Internal Board Short Circuit</option>
+                  </optgroup>
+                  <optgroup label="Other / General">
+                    <option value="No Visible Damage / False Positive">No Visible Damage / False Positive</option>
+                    <option value="Normal Wear and Tear">Normal Wear and Tear</option>
+                    <option value="Other">Other (Type custom label)...</option>
+                  </optgroup>
                 </select>
 
                 {correctedLabel === 'Other' && (
@@ -258,11 +291,11 @@ export default function AdminDashboard() {
                       type="text" 
                       value={customLabel} 
                       onChange={(e) => handleCustomLabelChange(e.target.value)} 
-                      placeholder="Type custom damage class..."
+                      placeholder="Type custom damage classification..."
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#2563eb]"
                     />
                     {filteredSuggestions.length > 0 && (
-                      <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden">
+                      <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden max-h-48 overflow-y-auto">
                         {filteredSuggestions.map((suggestion, idx) => (
                           <div 
                             key={idx}
