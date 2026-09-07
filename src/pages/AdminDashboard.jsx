@@ -181,7 +181,7 @@ export default function AdminDashboard() {
                           setCorrectedLabel('');
                           setCustomLabel('');
                         }
-                      }} className="text-[#2563eb] hover:text-blue-800 text-sm font-bold">Review Claim â†’</button>
+                      }} className="text-[#2563eb] hover:text-blue-800 text-sm font-bold">Review Claim →ton>
                     </td>
                   </tr>
                 ))
