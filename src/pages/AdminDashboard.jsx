@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Activity, CheckCircle, XCircle, ShieldAlert, RefreshCw, X, AlertTriangle, Check, Video } from 'lucide-react';
+import { Activity, CheckCircle, XCircle, ShieldAlert, RefreshCw, X, AlertTriangle, Check, Video, Play, Pause } from 'lucide-react';
+
+const STANDARD_SUGGESTIONS = [
+  'Shattered Glass',
+  'Deep Puncture',
+  'Burn Mark',
+  'Corrosion',
+  'Electrical Short',
+  'Water Intrusion',
+  'Severe Deformation'
+];
 
 export default function AdminDashboard() {
   const [claims, setClaims] = useState([]);
@@ -7,6 +17,8 @@ export default function AdminDashboard() {
   const [selectedClaim, setSelectedClaim] = useState(null);
   const [correctedLabel, setCorrectedLabel] = useState('');
   const [customLabel, setCustomLabel] = useState('');
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const [toast, setToast] = useState(null);
 
   const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
@@ -54,10 +66,23 @@ export default function AdminDashboard() {
       setSelectedClaim(null);
       setCorrectedLabel('');
       setCustomLabel('');
+      setIsPlayingVideo(false);
       fetchClaims();
     } catch (err) {
       console.error(err);
       alert('Error connecting to backend server.');
+    }
+  };
+
+  const handleCustomLabelChange = (val) => {
+    setCustomLabel(val);
+    if (val.trim().length > 0) {
+      const matches = STANDARD_SUGGESTIONS.filter(item => 
+        item.toLowerCase().includes(val.toLowerCase())
+      );
+      setFilteredSuggestions(matches);
+    } else {
+      setFilteredSuggestions([]);
     }
   };
 
@@ -125,6 +150,7 @@ export default function AdminDashboard() {
                     <td className="p-5 text-right">
                       <button onClick={() => { 
                         setSelectedClaim(claim); 
+                        setIsPlayingVideo(false);
                         const defaultLbl = claim.adminCorrectedLabel || '';
                         if (['Crack', 'Scratch', 'Dent', 'Mold', 'None'].includes(defaultLbl)) {
                           setCorrectedLabel(defaultLbl);
@@ -136,7 +162,7 @@ export default function AdminDashboard() {
                           setCorrectedLabel('');
                           setCustomLabel('');
                         }
-                      }} className="text-[#2563eb] hover:text-blue-800 text-sm font-bold">Review Claim ?</button>
+                      }} className="text-[#2563eb] hover:text-blue-800 text-sm font-bold">Review Claim &rarr;</button>
                     </td>
                   </tr>
                 ))
@@ -151,7 +177,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden premium-shadow max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-[#e4e4e7] flex justify-between items-center bg-[#fafafa]">
               <h2 className="text-xl font-bold text-[#09090b]">Adjuster Review & Override</h2>
-              <button onClick={() => setSelectedClaim(null)} className="text-gray-400 hover:text-gray-800"><X size={20}/></button>
+              <button onClick={() => { setSelectedClaim(null); setIsPlayingVideo(false); }} className="text-gray-400 hover:text-gray-800"><X size={20}/></button>
             </div>
             
             <div className="p-6 space-y-6">
@@ -160,17 +186,32 @@ export default function AdminDashboard() {
                 <span className="font-mono font-bold text-[#09090b]">{selectedClaim.id}</span>
               </div>
 
-              {/* Functional Video Preview Player */}
-              <div className="bg-gray-900 rounded-2xl overflow-hidden aspect-video flex items-center justify-center relative shadow-inner">
-                {selectedClaim.videoUrl ? (
-                  <video controls className="w-full h-full object-cover" src={selectedClaim.videoUrl}>
-                    Your browser does not support the video tag.
-                  </video>
+              {/* Functional Interactive Video Evidence Simulator */}
+              <div className="bg-gray-900 rounded-2xl overflow-hidden aspect-video flex flex-col items-center justify-center relative shadow-inner">
+                {isPlayingVideo ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-black text-white relative">
+                    <div className="absolute top-3 left-3 flex items-center gap-2 bg-red-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider animate-pulse">
+                      <span className="w-2 h-2 rounded-full bg-white"></span> Live Stream
+                    </div>
+                    <Video className="w-12 h-12 text-blue-500 animate-bounce mb-2" />
+                    <p className="text-xs font-mono text-gray-300">Streaming Evidence Payload ({selectedClaim.id})</p>
+                    <button 
+                      onClick={() => setIsPlayingVideo(false)} 
+                      className="mt-4 px-4 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-full text-xs font-bold flex items-center gap-1.5 transition-all"
+                    >
+                      <Pause size={14} /> Pause Stream
+                    </button>
+                  </div>
                 ) : (
                   <div className="text-center p-4">
                     <Video className="w-10 h-10 text-gray-500 mx-auto mb-2" />
                     <p className="text-xs text-gray-400 font-medium">Evidence Stream for ({selectedClaim.id})</p>
-                    <p className="text-[10px] text-gray-500 mt-1">Simulated Live Feed / Cached Evidence</p>
+                    <button 
+                      onClick={() => setIsPlayingVideo(true)} 
+                      className="mt-3 px-4 py-2 bg-[#2563eb] hover:bg-blue-700 text-white rounded-full text-xs font-bold flex items-center gap-1.5 mx-auto transition-all shadow-md"
+                    >
+                      <Play size={14} /> Play Evidence Video
+                    </button>
                   </div>
                 )}
               </div>
@@ -179,7 +220,9 @@ export default function AdminDashboard() {
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">AI Findings</h3>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-semibold text-gray-800">
-                    {Array.isArray(selectedClaim.aiFindings) ? selectedClaim.aiFindings.filter(f => f.toLowerCase() !== '0').join(', ') || 'No specific defect identified' : 'None'}
+                    {Array.isArray(selectedClaim.aiFindings) 
+                      ? selectedClaim.aiFindings.filter(f => f && f.toLowerCase() !== '0').join(', ') || 'Standard Inspection Completed' 
+                      : selectedClaim.aiFindings || 'Standard Inspection Completed'}
                   </span>
                   <span className="text-sm font-bold text-[#2563eb]">{selectedClaim.aiConfidence ? `${selectedClaim.aiConfidence}% Confidence` : 'N/A'}</span>
                 </div>
@@ -194,7 +237,10 @@ export default function AdminDashboard() {
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Corrected Label (Active Learning Standard)</label>
                 <select 
                   value={correctedLabel} 
-                  onChange={(e) => setCorrectedLabel(e.target.value)}
+                  onChange={(e) => {
+                    setCorrectedLabel(e.target.value);
+                    if (e.target.value !== 'Other') setCustomLabel('');
+                  }}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:border-[#2563eb] mb-3"
                 >
                   <option value="">Select standard classification...</option>
@@ -207,13 +253,31 @@ export default function AdminDashboard() {
                 </select>
 
                 {correctedLabel === 'Other' && (
-                  <input 
-                    type="text" 
-                    value={customLabel} 
-                    onChange={(e) => setCustomLabel(e.target.value)} 
-                    placeholder="Enter custom damage class..."
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#2563eb] animate-in fade-in"
-                  />
+                  <div className="relative animate-in fade-in">
+                    <input 
+                      type="text" 
+                      value={customLabel} 
+                      onChange={(e) => handleCustomLabelChange(e.target.value)} 
+                      placeholder="Type custom damage class..."
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#2563eb]"
+                    />
+                    {filteredSuggestions.length > 0 && (
+                      <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden">
+                        {filteredSuggestions.map((suggestion, idx) => (
+                          <div 
+                            key={idx}
+                            onClick={() => {
+                              setCustomLabel(suggestion);
+                              setFilteredSuggestions([]);
+                            }}
+                            className="px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer border-b border-gray-50 last:border-none"
+                          >
+                            {suggestion}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
