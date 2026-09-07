@@ -15,7 +15,7 @@ export default function AdminDashboard() {
   const fetchClaims = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000'}/api/claims`);
+      const res = await fetch(`${"https://web-production-47999.up.railway.app" || 'http://127.0.0.1:5000'}/api/claims`);
       const data = await res.json();
       setClaims(data);
     } catch (err) {
@@ -31,7 +31,7 @@ export default function AdminDashboard() {
 
   const handleOverride = async (isApproved) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000'}/api/feedback`, {
+      const res = await fetch(`${"https://web-production-47999.up.railway.app" || 'http://127.0.0.1:5000'}/api/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -168,3 +168,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

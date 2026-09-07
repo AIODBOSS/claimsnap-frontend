@@ -29,7 +29,7 @@ export default function SubmitClaimPage() {
       
       Object.entries(formData).forEach(([k, v]) => data.append(k, v));
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000'}/api/assess`, {
+      const response = await fetch(`${"https://web-production-47999.up.railway.app" || 'http://127.0.0.1:5000'}/api/assess`, {
         method: 'POST',
         body: data
       });
@@ -114,3 +114,4 @@ export default function SubmitClaimPage() {
     </div>
   );
 }
+
