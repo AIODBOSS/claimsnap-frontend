@@ -77,7 +77,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           status: statusOverride,
-          corrected_label: finalLabel || selectedClaim.aiFindings?.[0] || 'Unknown'
+          corrected_label: correctedLabel === '' ? (selectedClaim.aiFindings?.[0] || 'Unknown') : (correctedLabel === 'Other' ? customLabel : correctedLabel)
         })
       });
 
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
                           setCorrectedLabel('');
                           setCustomLabel('');
                         }
-                      }} className="text-[#2563eb] hover:text-blue-800 text-sm font-bold">Review Claim ?</button>
+                      }} className="text-[#2563eb] hover:text-blue-800 text-sm font-bold">Review Claim →</button>
                     </td>
                   </tr>
                 ))
