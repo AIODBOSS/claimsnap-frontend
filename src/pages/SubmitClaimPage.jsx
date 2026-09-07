@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import VideoRecorder from '../components/VideoRecorder';
 import ClaimForm from '../components/ClaimForm';
@@ -25,22 +25,29 @@ export default function SubmitClaimPage() {
     try {
       const data = new FormData();
       data.append('video', videoBlob, 'claim-video.webm');
-      data.append('asset_id', formData.policyNumber); // Bridge to backend requirement
+      data.append('asset_id', formData.policyNumber);
       
       Object.entries(formData).forEach(([k, v]) => data.append(k, v));
 
-      const response = await fetch(`${"https://web-production-47999.up.railway.app" || 'http://127.0.0.1:5000'}/api/assess`, {
+      const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://127.0.0.1:5000' 
+        : 'https://web-production-47999.up.railway.app';
+
+      const response = await fetch(`${API_BASE}/api/assess`, {
         method: 'POST',
         body: data
       });
 
-      if (!response.ok) throw new Error('Submission failed');
-      const result = await response.json();
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(errText || 'Submission failed');
+      }
       
-      // Navigate to the status page using the returned asset_id
+      const result = await response.json();
       navigate(`/status/${result.asset_id}`);
-    } catch {
-      alert('Submission failed. Ensure backend is running.');
+    } catch (err) {
+      console.error("Submission error:", err);
+      alert(`Submission failed: ${err.message}. Ensure backend is running.`);
       setIsSubmitting(false);
       setStep(STEPS.FORM);
     }
@@ -114,4 +121,3 @@ export default function SubmitClaimPage() {
     </div>
   );
 }
-
