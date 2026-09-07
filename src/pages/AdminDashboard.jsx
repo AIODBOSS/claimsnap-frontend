@@ -162,7 +162,7 @@ export default function AdminDashboard() {
                     <td className="p-5">
                       <div className="flex items-center gap-2">
                         <Activity size={16} className={claim.aiConfidence > 75 ? "text-emerald-500" : "text-amber-500"} />
-                        <span className="text-sm font-bold text-gray-700">{claim.aiConfidence ? `${claim.aiConfidence.toFixed(1)}%` : 'N/A'}</span>
+                        <span className="text-sm font-bold text-gray-700">{claim.aiConfidence != null ? `${claim.aiConfidence.toFixed(1)}%` : 'N/A'}</span>
                       </div>
                     </td>
                     <td className="p-5">{getStatusBadge(claim.status)}</td>
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
                           setCorrectedLabel('');
                           setCustomLabel('');
                         }
-                      }} className="text-[#2563eb] hover:text-blue-800 text-sm font-bold">Review Claim →</button>
+                      }} className="text-[#2563eb] hover:text-blue-800 text-sm font-bold">Review Claim â†’</button>
                     </td>
                   </tr>
                 ))
@@ -232,7 +232,7 @@ export default function AdminDashboard() {
                       ? selectedClaim.aiFindings.filter(f => f && f.toLowerCase() !== '0').join(', ') || 'Standard Inspection Completed' 
                       : selectedClaim.aiFindings || 'Standard Inspection Completed'}
                   </span>
-                  <span className="text-sm font-bold text-[#2563eb]">{selectedClaim.aiConfidence ? `${selectedClaim.aiConfidence}% Confidence` : 'N/A'}</span>
+                  <span className="text-sm font-bold text-[#2563eb]">{selectedClaim.aiConfidence != null ? `${selectedClaim.aiConfidence}% Confidence` : 'N/A'}</span>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <p className="text-sm text-gray-600 flex items-center gap-2">
