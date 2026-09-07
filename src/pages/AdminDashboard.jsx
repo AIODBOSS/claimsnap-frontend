@@ -6,9 +6,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedClaim, setSelectedClaim] = useState(null);
   const [correctedLabel, setCorrectedLabel] = useState('');
+  const [customLabel, setCustomLabel] = useState('');
   const [toast, setToast] = useState(null);
 
-  const API_BASE = "https://web-production-47999.up.railway.app" || "http://127.0.0.1:5000";
+  const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://127.0.0.1:5000' 
+    : 'https://web-production-47999.up.railway.app';
 
   const showToast = (message) => {
     setToast(message);
@@ -34,13 +37,14 @@ export default function AdminDashboard() {
 
   const handleOverride = async (statusOverride) => {
     if (!selectedClaim) return;
+    const finalLabel = correctedLabel === 'Other' ? customLabel : correctedLabel;
     try {
       const res = await fetch(`${API_BASE}/api/admin/override/${selectedClaim.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           status: statusOverride,
-          corrected_label: correctedLabel || selectedClaim.aiFindings?.[0] || 'Unknown'
+          corrected_label: finalLabel || selectedClaim.aiFindings?.[0] || 'Unknown'
         })
       });
 
@@ -49,6 +53,7 @@ export default function AdminDashboard() {
       showToast(`Claim ${selectedClaim.id} successfully updated to ${statusOverride}.`);
       setSelectedClaim(null);
       setCorrectedLabel('');
+      setCustomLabel('');
       fetchClaims();
     } catch (err) {
       console.error(err);
@@ -118,7 +123,20 @@ export default function AdminDashboard() {
                     <td className="p-5">{getStatusBadge(claim.status)}</td>
                     <td className="p-5 text-sm text-gray-600 font-medium">{claim.adminCorrectedLabel || <span className="text-gray-400 italic">None</span>}</td>
                     <td className="p-5 text-right">
-                      <button onClick={() => { setSelectedClaim(claim); setCorrectedLabel(claim.adminCorrectedLabel || ''); }} className="text-[#2563eb] hover:text-blue-800 text-sm font-bold">Review Claim ?</button>
+                      <button onClick={() => { 
+                        setSelectedClaim(claim); 
+                        const defaultLbl = claim.adminCorrectedLabel || '';
+                        if (['Crack', 'Scratch', 'Dent', 'Mold', 'None'].includes(defaultLbl)) {
+                          setCorrectedLabel(defaultLbl);
+                          setCustomLabel('');
+                        } else if (defaultLbl) {
+                          setCorrectedLabel('Other');
+                          setCustomLabel(defaultLbl);
+                        } else {
+                          setCorrectedLabel('');
+                          setCustomLabel('');
+                        }
+                      }} className="text-[#2563eb] hover:text-blue-800 text-sm font-bold">Review Claim ?</button>
                     </td>
                   </tr>
                 ))
@@ -142,17 +160,27 @@ export default function AdminDashboard() {
                 <span className="font-mono font-bold text-[#09090b]">{selectedClaim.id}</span>
               </div>
 
-              <div className="bg-gray-900 rounded-2xl overflow-hidden aspect-video flex items-center justify-center relative">
-                <div className="text-center p-4">
-                  <Video className="w-10 h-10 text-gray-500 mx-auto mb-2" />
-                  <p className="text-xs text-gray-400 font-medium">Claim Evidence Stream ({selectedClaim.id})</p>
-                </div>
+              {/* Functional Video Preview Player */}
+              <div className="bg-gray-900 rounded-2xl overflow-hidden aspect-video flex items-center justify-center relative shadow-inner">
+                {selectedClaim.videoUrl ? (
+                  <video controls className="w-full h-full object-cover" src={selectedClaim.videoUrl}>
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <div className="text-center p-4">
+                    <Video className="w-10 h-10 text-gray-500 mx-auto mb-2" />
+                    <p className="text-xs text-gray-400 font-medium">Evidence Stream for ({selectedClaim.id})</p>
+                    <p className="text-[10px] text-gray-500 mt-1">Simulated Live Feed / Cached Evidence</p>
+                  </div>
+                )}
               </div>
               
               <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">AI Findings</h3>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-gray-800">{selectedClaim.aiFindings ? selectedClaim.aiFindings.join(', ') : 'None'}</span>
+                  <span className="text-sm font-semibold text-gray-800">
+                    {Array.isArray(selectedClaim.aiFindings) ? selectedClaim.aiFindings.filter(f => f.toLowerCase() !== '0').join(', ') || 'No specific defect identified' : 'None'}
+                  </span>
                   <span className="text-sm font-bold text-[#2563eb]">{selectedClaim.aiConfidence ? `${selectedClaim.aiConfidence}% Confidence` : 'N/A'}</span>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-200">
@@ -163,14 +191,30 @@ export default function AdminDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Corrected Label (Active Learning)</label>
-                <input 
-                  type="text" 
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Corrected Label (Active Learning Standard)</label>
+                <select 
                   value={correctedLabel} 
-                  onChange={(e) => setCorrectedLabel(e.target.value)} 
-                  placeholder="Enter true damage class..."
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#2563eb]"
-                />
+                  onChange={(e) => setCorrectedLabel(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:border-[#2563eb] mb-3"
+                >
+                  <option value="">Select standard classification...</option>
+                  <option value="Crack">Crack / Fracture</option>
+                  <option value="Scratch">Surface Scratch</option>
+                  <option value="Dent">Structural Dent</option>
+                  <option value="Mold">Water / Mold Damage</option>
+                  <option value="None">No Damage / False Positive</option>
+                  <option value="Other">Other (Custom Label)...</option>
+                </select>
+
+                {correctedLabel === 'Other' && (
+                  <input 
+                    type="text" 
+                    value={customLabel} 
+                    onChange={(e) => setCustomLabel(e.target.value)} 
+                    placeholder="Enter custom damage class..."
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-[#2563eb] animate-in fade-in"
+                  />
+                )}
               </div>
 
               <div>
