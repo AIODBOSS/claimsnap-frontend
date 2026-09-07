@@ -18,7 +18,7 @@ export default function ClaimStatusPage() {
 
   const fetchClaim = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/claims/${claimId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://web-production-47999.up.railway.app'}/api/claims/${claimId}`);
       if (!res.ok) throw new Error('Not found');
       const data = await res.json();
       setClaim(data);
@@ -122,3 +122,4 @@ export default function ClaimStatusPage() {
     </div>
   );
 }
+
