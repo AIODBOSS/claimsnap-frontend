@@ -34,17 +34,43 @@ export default function VideoRecorder({ onVideoReady }) {
 
   const startCamera = async () => {
     setError(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: true,
-      });
-      streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
-      setRecorderState('preview');
-    } catch (err) {
-      setError('Camera access denied or unavailable. Please allow access.');
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('Camera access is not supported by this browser.');
+      return;
     }
+
+    const attempts = [
+      {
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      },
+      {
+        video: true,
+        audio: false,
+      },
+    ];
+
+    for (const constraints of attempts) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play().catch(() => {});
+        }
+        setRecorderState('preview');
+        return;
+      } catch (err) {
+        console.warn('Camera attempt failed:', err.name, err.message);
+      }
+    }
+
+    setError('Unable to access the camera. Please check that a camera is connected and not being used by another application.');
   };
 
   const startRecording = () => {

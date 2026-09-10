@@ -5,7 +5,7 @@ import { Clock, Activity, CheckCircle, AlertCircle, XCircle, ArrowLeft, RefreshC
 const STATUS_CONFIG = {
   pending:   { label: 'Pending Analysis', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', desc: 'Your claim is queued for AI analysis.' },
   analysing: { label: 'AI Analysing', icon: Activity, color: 'text-[#2563eb]', bg: 'bg-[#f0f9ff]', border: 'border-blue-200', desc: 'Our custom YOLOv8 model is processing your video.' },
-  approved:  { label: 'Approved', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', desc: 'Approved! Payment will be processed within 24 hours.' },
+  approved:  { label: 'Approved', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', desc: 'AI assessment completed. The claim has been provisionally approved by the prototype and may require insurer review before settlement.' },
   review:    { label: 'Under Review', icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', desc: 'Flagged for adjuster review. We will contact you shortly.' },
   rejected:  { label: 'Rejected', icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', desc: 'This claim could not be verified by our system.' },
 };
@@ -18,7 +18,8 @@ export default function ClaimStatusPage() {
 
   const fetchClaim = async () => {
     try {
-      const res = await fetch(`${"https://web-production-47999.up.railway.app" || 'https://web-production-47999.up.railway.app'}/api/claims/${claimId}`);
+      const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:5000' : 'https://web-production-47999.up.railway.app';
+      const res = await fetch(`${API_BASE}/api/claims/${claimId}`);
       if (!res.ok) throw new Error('Not found');
       const data = await res.json();
       setClaim(data);
