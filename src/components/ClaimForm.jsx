@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
+import { Brain, ShieldCheck, X } from 'lucide-react';
 
 const CLAIM_TYPES = [
   { value: 'vehicle', label: 'Vehicle Damage' },
@@ -21,8 +22,10 @@ function ClaimForm({ onSubmit, isSubmitting }) {
   const [formData, setFormData] = useState({
     claimType: '', description: '', policyNumber: '',
     contactPhone: '', incidentDate: '',
+    modelImprovementConsent: false,
   });
   const [errors, setErrors] = useState({});
+  const [showConsentModal, setShowConsentModal] = useState(false);
 
   const validate = () => {
     const e = {};
@@ -45,7 +48,14 @@ function ClaimForm({ onSubmit, isSubmitting }) {
       setErrors(validationErrors);
       return;
     }
-    onSubmit(formData);
+    setShowConsentModal(true);
+  };
+
+  const submitWithConsent = (consent) => {
+    const updated = { ...formData, modelImprovementConsent: consent };
+    setFormData(updated);
+    setShowConsentModal(false);
+    onSubmit(updated);
   };
 
   return (
@@ -121,6 +131,32 @@ function ClaimForm({ onSubmit, isSubmitting }) {
           </button>
         </div>
       </div>
+
+      {showConsentModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-in fade-in">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white border border-gray-200 shadow-2xl">
+            <div className="flex items-start justify-between px-6 py-5 border-b border-gray-100 bg-gray-50">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><Brain size={21} /></div>
+                <div>
+                  <h2 className="text-lg font-extrabold text-[#09090b]">Help improve ClaimSnap</h2>
+                  <p className="text-xs text-gray-500 mt-1">Optional model-improvement consent</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowConsentModal(false)} className="text-gray-400 hover:text-gray-800"><X size={20}/></button>
+            </div>
+            <div className="px-6 py-6">
+              <p className="text-sm leading-6 text-gray-600">Your claim can be submitted without this permission. If you choose to allow it, your submitted video and related assessment information may be retained for research and future improvement of ClaimSnap's damage-detection model.</p>
+              <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 p-4 text-xs leading-5 text-blue-900">Your claim assessment does not depend on this choice. Only consented and administrator-reviewed records can become eligible for future model-improvement export.</div>
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button type="button" onClick={() => submitWithConsent(false)} className="px-5 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-800 font-semibold hover:bg-gray-50 transition">Not now &amp; submit</button>
+                <button type="button" onClick={() => submitWithConsent(true)} className="px-5 py-3.5 rounded-xl bg-[#09090b] text-white font-semibold hover:bg-black transition flex items-center justify-center gap-2"><ShieldCheck size={17}/> Allow &amp; submit</button>
+              </div>
+              <p className="mt-4 text-[11px] text-gray-400 text-center">Consent version 1.0</p>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

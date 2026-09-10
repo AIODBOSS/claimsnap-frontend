@@ -1,6 +1,6 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Clock, Activity, CheckCircle, AlertCircle, XCircle, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Clock, Activity, CheckCircle, AlertCircle, XCircle, ArrowLeft, RefreshCw, ShieldCheck } from 'lucide-react';
 
 const STATUS_CONFIG = {
   pending:   { label: 'Pending Analysis', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', desc: 'Your claim is queued for AI analysis.' },
@@ -61,7 +61,8 @@ export default function ClaimStatusPage() {
     </div>
   );
 
-  const info = STATUS_CONFIG[claim.status] || STATUS_CONFIG.pending;
+  const finalStatus = claim.adminReviewStatus === 'reviewed' && claim.adminDecision ? claim.adminDecision : claim.status;
+  const info = STATUS_CONFIG[finalStatus] || STATUS_CONFIG.pending;
   const StatusIcon = info.icon;
 
   return (
@@ -79,8 +80,43 @@ export default function ClaimStatusPage() {
           </div>
         </div>
 
-        <div className={`p-5 rounded-2xl ${info.bg} ${info.border} border mb-8 flex items-start gap-3`}>
+        <div className={`p-5 rounded-2xl ${info.bg} ${info.border} border mb-5 flex items-start gap-3`}>
           <p className={`text-sm font-medium ${info.color} leading-relaxed`}>{info.desc}</p>
+        </div>
+
+        <div className="mb-8 p-5 rounded-2xl bg-gray-50 border border-gray-200">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Administrator Review</p>
+              <p className="text-sm font-semibold text-gray-800 mt-1">
+                {claim.adminReviewStatus === 'reviewed'
+                  ? 'Reviewed by administrator'
+                  : 'Pending administrator review'}
+              </p>
+            </div>
+
+            <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${
+              claim.adminReviewStatus === 'reviewed'
+                ? 'bg-blue-100 text-blue-700'
+                : 'bg-gray-100 text-gray-700'
+            }`}>
+              {claim.adminReviewStatus === 'reviewed'
+                ? <ShieldCheck size={14} />
+                : <Clock size={14} />}
+              {claim.adminReviewStatus === 'reviewed' ? 'Reviewed' : 'Pending'}
+            </div>
+          </div>
+
+          {claim.adminReviewStatus === 'reviewed' && claim.adminDecision && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">Administrator Decision</span>
+                <span className="text-sm font-bold text-[#09090b] capitalize">
+                  {claim.adminDecision}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-1 mb-8">
@@ -104,6 +140,19 @@ export default function ClaimStatusPage() {
               {claim.aiFindings.map((f, i) => (
                 <span key={i} className="px-3 py-1.5 bg-white border border-gray-200 text-[#09090b] text-xs font-semibold rounded-lg premium-shadow">
                   {f}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {claim.adminReviewStatus === 'reviewed' && claim.adminCorrectedLabels?.length > 0 && (
+          <div className="mb-8 p-5 bg-blue-50 rounded-2xl border border-blue-100">
+            <h3 className="text-sm font-bold text-[#09090b] mb-3">Administrator-Verified Findings</h3>
+            <div className="flex flex-wrap gap-2">
+              {claim.adminCorrectedLabels.map((f, i) => (
+                <span key={i} className="px-3 py-1.5 bg-white border border-blue-200 text-[#09090b] text-xs font-semibold rounded-lg">
+                  {String(f).replaceAll('_', ' ')}
                 </span>
               ))}
             </div>
